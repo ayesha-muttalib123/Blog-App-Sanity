@@ -3,67 +3,52 @@ import { client, urlFor } from "@/app/lib/sanity";
 import { PortableText } from "@portabletext/react";
 import Image from "next/image";
 
-// Define the type for page params
-interface PageProps {
-  params: { slug: string };
-}
+export const revalidate = 30; // revalidate at most 30 seconds
 
-// Revalidate every 30 seconds
-export const revalidate = 30; 
-
-// Fetching blog data from Sanity
 async function getData(slug: string) {
   const query = `
     *[_type == "blog" && slug.current == '${slug}'] {
-      "currentSlug": slug.current,
-      title,
-      content,
-      titleImage
-    }[0]`;
+        "currentSlug": slug.current,
+          title,
+          content,
+          titleImage
+      }[0]`;
 
   const data = await client.fetch(query);
   return data;
 }
 
-// Define the BlogArticle component
-export default async function BlogArticle({ params }: PageProps) {
+export default async function BlogArticle({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const data: fullBlog = await getData(params.slug);
 
-  if (!data) {
-    return <p>Blog post not found.</p>; // Handle case where blog is not found
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Blog Header */}
-      <header className="text-center">
-        <h1 className="text-base text-primary font-semibold tracking-wide uppercase">
-          Ayesha - Blog
-        </h1>
-        <h2 className="mt-2 text-3xl leading-8 font-bold tracking-tight sm:text-4xl">
+    <div className="mt-8">
+      <h1>
+        <span className="block text-base text-center text-primary font-semibold tracking-wide uppercase">
+          Jan Marshal - Blog
+        </span>
+        <span className="mt-2 block text-3xl text-center leading-8 font-bold tracking-tight sm:text-4xl">
           {data.title}
-        </h2>
-      </header>
+        </span>
+      </h1>
 
-      {/* Title Image */}
-      <div className="mt-8">
-        <Image
-          src={urlFor(data.titleImage).url()}
-          width={800}
-          height={800}
-          alt="Title Image"
-          priority
-          className="rounded-lg border shadow-md"
-        />
+      <Image
+        src={urlFor(data.titleImage).url()}
+        width={800}
+        height={800}
+        alt="Title Image"
+        priority
+        className="rounded-lg mt-8 border"
+      />
+
+      <div className="mt-16 prose prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
+        <PortableText value={data.content} />
       </div>
-
-      {/* Blog Content */}
-      <article className="mt-16 prose prose-blue prose-lg dark:prose-invert">
-        <div className="mt-16 prose prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
-          <PortableText value={data.content} />
-        </div>
-      </article>
-
+      
       {/* Comment Section */}
       <section className="mt-16">
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">
@@ -109,5 +94,8 @@ export default async function BlogArticle({ params }: PageProps) {
         </form>
       </section>
     </div>
+  
   );
 }
+
+
