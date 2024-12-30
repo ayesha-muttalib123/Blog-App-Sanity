@@ -2,6 +2,9 @@ import { fullBlog } from "@/app/lib/interface";
 import { client, urlFor } from "@/app/lib/sanity";
 import { PortableText } from "@portabletext/react";
 import Image from "next/image";
+interface PageProps {
+    params: { slug: string };
+  }
 
 export const revalidate = 30; // Revalidate every 30 seconds
 
@@ -18,11 +21,7 @@ async function getData(slug: string) {
   return data;
 }
 
-export default async function BlogArticle({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function BlogArticle({params}:PageProps) {
     //dont put array on full blog cz its one object already
   const data: fullBlog = await getData(params.slug);
 
