@@ -2,12 +2,16 @@ import { fullBlog } from "@/app/lib/interface";
 import { client, urlFor } from "@/app/lib/sanity";
 import { PortableText } from "@portabletext/react";
 import Image from "next/image";
+
+// Define the type for page params
 interface PageProps {
-    params: { slug: string };
-  }
+  params: { slug: string };
+}
 
-export const revalidate = 30; // Revalidate every 30 seconds
+// Revalidate every 30 seconds
+export const revalidate = 30; 
 
+// Fetching blog data from Sanity
 async function getData(slug: string) {
   const query = `
     *[_type == "blog" && slug.current == '${slug}'] {
@@ -21,9 +25,13 @@ async function getData(slug: string) {
   return data;
 }
 
-export default async function BlogArticle({params}:PageProps) {
-    //dont put array on full blog cz its one object already
+// Define the BlogArticle component
+export default async function BlogArticle({ params }: PageProps) {
   const data: fullBlog = await getData(params.slug);
+
+  if (!data) {
+    return <p>Blog post not found.</p>; // Handle case where blog is not found
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -44,7 +52,6 @@ export default async function BlogArticle({params}:PageProps) {
           width={800}
           height={800}
           alt="Title Image"
-          //next js will list things which are in the priority lists
           priority
           className="rounded-lg border shadow-md"
         />
@@ -52,10 +59,9 @@ export default async function BlogArticle({params}:PageProps) {
 
       {/* Blog Content */}
       <article className="mt-16 prose prose-blue prose-lg dark:prose-invert">
-        {/* adding prose things using tailwind typography it the library which adjust the looking of your text  */}
-      <div className="mt-16 prose prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
-        <PortableText value={data.content} />
-      </div>
+        <div className="mt-16 prose prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
+          <PortableText value={data.content} />
+        </div>
       </article>
 
       {/* Comment Section */}
