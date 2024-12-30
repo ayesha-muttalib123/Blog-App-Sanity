@@ -1,101 +1,174 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { simpleBlogCard } from "./lib/interface"; 
+import { client, urlFor } from "./lib/sanity"; // Already imported
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export default function Home() {
+export const revalidate = 30; // revalidate at most 30 seconds
+
+// Fetch data for recent blogs
+async function getRecentBlogs() {
+  // Fetch blogs for this month
+  const thisMonthQuery = `
+    *[_type == 'blog' && _createdAt >= '2024-12-01T00:00:00Z'] | order(_createdAt desc) {
+      title,
+      smallDescription,
+      "currentSlug": slug.current,
+      titleImage,
+      _createdAt
+    }`;
+
+  // Fetch blogs for last month
+  const lastMonthQuery = `
+    *[_type == 'blog' && _createdAt >= '2024-11-01T00:00:00Z' && _createdAt < '2024-12-01T00:00:00Z'] | order(_createdAt desc) {
+      title,
+      smallDescription,
+      "currentSlug": slug.current,
+      titleImage,
+      _createdAt
+    }`;
+
+  // Fetch older blogs (before November 2024)
+  const olderBlogsQuery = `
+    *[_type == 'blog' && _createdAt < '2024-11-01T00:00:00Z'] | order(_createdAt desc) {
+      title,
+      smallDescription,
+      "currentSlug": slug.current,
+      titleImage,
+      _createdAt
+    }`;
+
+  // Fetch blogs for each time frame
+  const thisMonthBlogs = await client.fetch(thisMonthQuery);
+  const lastMonthBlogs = await client.fetch(lastMonthQuery);
+  const olderBlogs = await client.fetch(olderBlogsQuery);
+
+  return {
+    thisMonthBlogs,
+    lastMonthBlogs,
+    olderBlogs,
+  };
+}
+
+export default async function Home() {
+  // Fetch data from the getRecentBlogs function
+  const { thisMonthBlogs, lastMonthBlogs, olderBlogs } = await getRecentBlogs();
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="container mx-auto px-4 py-8">
+      {/* Recent Blogs Section */}
+      <section>
+        <h1 className="text-2xl font-bold mb-5">Recent Blogs Posts </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 mt-5 gap-5">
+          {thisMonthBlogs.map((post: simpleBlogCard, idx: number) => (
+            <Card key={idx}>
+              <Image
+                src={urlFor(post.titleImage).url()}
+                alt={post.title}
+                width={500}
+                height={500}
+                className="rounded-t-lg h-[200px] object-cover"
+              />
+              <CardContent className="mt-5">
+                <h3 className="text-lg line-clamp-2 font-bold">{post.title}</h3>
+                <p className="line-clamp-3 text-sm mt-2 text-gray-600 dark:text-gray-300">
+                  {post.smallDescription}
+                </p>
+                <Button asChild className="w-full mt-7">
+                  <Link href={`/blog/${post.currentSlug}`}>Read More</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Time Frame Section */}
+      <section className="mt-16">
+       
+
+        {/* This Month Blogs */}
+        <div className="mt-5">
+          <h1 className="text-xl font-bold mb-5">This Month Blog Posts</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 mt-5 gap-5">
+            {thisMonthBlogs.map((post: simpleBlogCard, idx: number) => (
+              <Card key={idx}>
+                <Image
+                  src={urlFor(post.titleImage).url()}
+                  alt={post.title}
+                  width={500}
+                  height={500}
+                  className="rounded-t-lg h-[200px] object-cover"
+                />
+                <CardContent className="mt-5">
+                  <h3 className="text-lg line-clamp-2 font-bold">{post.title}</h3>
+                  <p className="line-clamp-3 text-sm mt-2 text-gray-600 dark:text-gray-300">
+                    {post.smallDescription}
+                  </p>
+                  <Button asChild className="w-full mt-7">
+                    <Link href={`/blog/${post.currentSlug}`}>Read More</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Last Month Blogs */}
+        <div className="mt-5">
+          <h1 className="text-xl font-bold mb-5">Last Month Blog Posts</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 mt-5 gap-5">
+            {lastMonthBlogs.map((post: simpleBlogCard, idx: number) => (
+              <Card key={idx}>
+                <Image
+                  src={urlFor(post.titleImage).url()}
+                  alt={post.title}
+                  width={500}
+                  height={500}
+                  className="rounded-t-lg h-[200px] object-cover"
+                />
+                <CardContent className="mt-5">
+                  <h3 className="text-lg line-clamp-2 font-bold">{post.title}</h3>
+                  <p className="line-clamp-3 text-sm mt-2 text-gray-600 dark:text-gray-300">
+                    {post.smallDescription}
+                  </p>
+                  <Button asChild className="w-full mt-7">
+                    <Link href={`/blog/${post.currentSlug}`}>Read More</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Older Blogs */}
+        <div className="mt-5">
+          <h3 className="text-xl  font-bold">Older Blog Posts </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 mb-5 mt-5 gap-5">
+            {olderBlogs.map((post: simpleBlogCard, idx: number) => (
+              <Card key={idx}>
+                <Image
+                  src={urlFor(post.titleImage).url()}
+                  alt={post.title}
+                  width={500}
+                  height={500}
+                  className="rounded-t-lg h-[200px] object-cover"
+                />
+                <CardContent className="mt-5">
+                  <h1 className="text-lg line-clamp-2 font-bold">{post.title}</h1>
+                  <p className="line-clamp-3 text-sm mt-2 text-gray-600 dark:text-gray-300">
+                    {post.smallDescription}
+                  </p>
+                  <Button asChild className="w-full mt-7">
+                    <Link href={`/blog/${post.currentSlug}`}>Read More</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
