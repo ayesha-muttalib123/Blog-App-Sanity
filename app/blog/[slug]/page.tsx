@@ -5,24 +5,28 @@ import Image from "next/image";
 
 export const revalidate = 30; // revalidate at most 30 seconds
 
+// Adjusted interface for the props
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
+// Fetch blog data based on the slug
 async function getData(slug: string) {
-  const query = `
-    *[_type == "blog" && slug.current == '${slug}'] {
-        "currentSlug": slug.current,
-          title,
-          content,
-          titleImage
-      }[0]`;
+  const query = `*[_type == "blog" && slug.current == '${slug}'] {
+    "currentSlug": slug.current,
+    title,
+    content,
+    titleImage
+  }[0]`;
 
   const data = await client.fetch(query);
   return data;
 }
 
-export default async function BlogArticle({
-  params,
-}: {
-  params: { slug: string };
-}) {
+// Main component
+const BlogArticle: React.FC<PageProps> = async ({ params }) => {
   const data: fullBlog = await getData(params.slug);
 
   return (
@@ -94,8 +98,7 @@ export default async function BlogArticle({
         </form>
       </section>
     </div>
-  
   );
-}
+};
 
-
+export default BlogArticle;
