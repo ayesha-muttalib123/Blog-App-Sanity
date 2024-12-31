@@ -4,7 +4,8 @@ import { client, urlFor } from "./lib/sanity"; // Already imported
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
+// its for dynamic checking of caches as it will store previous one time you need to check if data come 
+// on api on sanity by de
 export const revalidate = 30; // revalidate at most 30 seconds
 
 // Fetch data for recent blogs
