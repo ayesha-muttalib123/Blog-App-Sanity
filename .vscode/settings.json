@@ -1,0 +1,12 @@
+{
+    "json.schemas": [],
+    
+        "files.associations": {
+          ".vercelignore": "plaintext",
+          "*.js": "javascript",
+          "*.ts": "typescript"
+        }
+      }
+      
+  
+  
