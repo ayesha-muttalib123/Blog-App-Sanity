@@ -27,8 +27,8 @@ async function getData(slug: string) {
 }
 
 // Main component
-const BlogArticle = async ({ params }: PageProps) => {
-  const { slug } = params;
+const BlogArticle = async ({ params }: { params: Promise<{ slug: string }> }) => {
+  const { slug } = await params; // Await params here
   const data: fullBlog = await getData(slug);
 
   return (
