@@ -1,3 +1,4 @@
+import React from "react";
 import { fullBlog } from "@/app/lib/interface";
 import { client, urlFor } from "@/app/lib/sanity";
 import { PortableText } from "@portabletext/react";
@@ -26,8 +27,9 @@ async function getData(slug: string) {
 }
 
 // Main component
-const BlogArticle: React.FC<PageProps> = async ({ params }) => {
-  const data: fullBlog = await getData(params.slug);
+const BlogArticle = async ({ params }: PageProps) => {
+  const { slug } = params;
+  const data: fullBlog = await getData(slug);
 
   return (
     <div className="mt-8">
@@ -52,7 +54,7 @@ const BlogArticle: React.FC<PageProps> = async ({ params }) => {
       <div className="mt-16 prose prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
         <PortableText value={data.content} />
       </div>
-      
+
       {/* Comment Section */}
       <section className="mt-16">
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">
